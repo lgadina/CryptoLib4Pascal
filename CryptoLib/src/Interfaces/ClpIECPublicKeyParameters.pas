@@ -34,7 +34,6 @@ type
     function GetQ: IECPoint;
     property Q: IECPoint read GetQ;
 
-    function Equals(const other: IECPublicKeyParameters): Boolean; reintroduce; overload;
   end;
 
 implementation

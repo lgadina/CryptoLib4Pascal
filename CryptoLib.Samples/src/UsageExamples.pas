@@ -348,6 +348,8 @@ begin
   CipherText := TUsageExamples.AES256CBCPascalCoinEncrypt(PlainText,
     PasswordBytes);
 
+  Writeln(TConverters.ConvertBytesToString(CipherText, TEncoding.UTF8));
+
   if TUsageExamples.AES256CBCPascalCoinDecrypt(CipherText, PasswordBytes,
     DecryptedCipherText) then
   begin
