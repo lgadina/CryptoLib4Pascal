@@ -627,6 +627,7 @@ type
   TCtsBlockCipher = class sealed(TBufferedBlockCipher, ICtsBlockCipher)
 
   strict private
+  var
     FblockSize: Int32;
 
   public
@@ -788,7 +789,7 @@ end;
 procedure TCbcBlockCipher.Reset;
 begin
   System.Move(FIV[0], FcbcV[0], System.Length(FIV));
-  TArrayUtils.Fill(FcbcNextV, 0, System.Length(FcbcNextV), Byte(0));
+  TArrayUtils.ZeroFill(FcbcNextV);
 
   Fcipher.Reset();
 end;
@@ -1178,7 +1179,7 @@ end;
 
 procedure TSicBlockCipher.Reset;
 begin
-  TArrayUtils.Fill(Fcounter, 0, System.Length(Fcounter), Byte(0));
+  TArrayUtils.ZeroFill(Fcounter);
   System.Move(FIV[0], Fcounter[0], System.Length(FIV) * System.SizeOf(Byte));
 
   Fcipher.Reset();

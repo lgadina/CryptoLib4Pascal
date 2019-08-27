@@ -31,11 +31,13 @@ uses
 
 resourcestring
   SCurveNil = 'Curve Cannot be Nil';
+  SScalarNil = 'Scalar Cannot be Nil';
   SGNil = 'G Cannot be Nil';
   SBigIntegerNotInitialized = 'BigInteger Not Initialized "%s"';
   SQNil = 'Q Cannot be Nil';
   SQInfinity = 'Point at Infinity "Q"';
   SQPointNotOnCurve = 'Point Not on Curve "Q"';
+  SScalarInvalidRange = 'Scalar is not in the Interval [1, n - 1]';
 
 type
 
@@ -43,11 +45,8 @@ type
 
   strict private
 
-    class var
-
-      FLock: TCriticalSection;
-
   var
+    FLock: TCriticalSection;
     Fcurve: IECCurve;
     Fseed: TCryptoLibByteArray;
     Fg: IECPoint;
@@ -60,14 +59,10 @@ type
     function GetHInv: TBigInteger; inline;
     function GetSeed: TCryptoLibByteArray; inline;
 
-    class procedure Boot(); static;
-    class constructor CreateECDomainParameters();
-    class destructor DestroyECDomainParameters();
-
   public
 
-    class function Validate(const c: IECCurve; const q: IECPoint)
-      : IECPoint; static;
+    class function ValidatePublicPoint(const c: IECCurve; const q: IECPoint)
+      : IECPoint; overload; static;
 
     constructor Create(const curve: IECCurve; const g: IECPoint;
       const n: TBigInteger); overload;
@@ -75,6 +70,11 @@ type
       const n, h: TBigInteger); overload;
     constructor Create(const curve: IECCurve; const g: IECPoint;
       const n, h: TBigInteger; const seed: TCryptoLibByteArray); overload;
+
+    function ValidatePrivateScalar(const d: TBigInteger): TBigInteger;
+    function ValidatePublicPoint(const q: IECPoint): IECPoint; overload;
+
+    destructor Destroy; override;
 
     property curve: IECCurve read GetCurve;
     property g: IECPoint read GetG;
@@ -92,7 +92,7 @@ implementation
 
 { TECDomainParameters }
 
-class function TECDomainParameters.Validate(const c: IECCurve;
+class function TECDomainParameters.ValidatePublicPoint(const c: IECCurve;
   const q: IECPoint): IECPoint;
 begin
   if (q = Nil) then
@@ -130,7 +130,6 @@ end;
 
 function TECDomainParameters.GetHInv: TBigInteger;
 begin
-
   FLock.Acquire;
   try
     if (not(FhInv.IsInitialized)) then
@@ -160,14 +159,6 @@ begin
   Create(curve, g, n, h, Nil);
 end;
 
-class procedure TECDomainParameters.Boot;
-begin
-  if FLock = Nil then
-  begin
-    FLock := TCriticalSection.Create;
-  end;
-end;
-
 constructor TECDomainParameters.Create(const curve: IECCurve; const g: IECPoint;
   const n, h: TBigInteger; const seed: TCryptoLibByteArray);
 begin
@@ -180,10 +171,12 @@ begin
     raise EArgumentNilCryptoLibException.CreateResFmt
       (@SBigIntegerNotInitialized, ['n']);
 
+  FLock := TCriticalSection.Create;
+
   // we can't check for (not (h.IsInitialized)) here as h is optional in X9.62 as it is not required for ECDSA
 
   Fcurve := curve;
-  Fg := Validate(curve, g);
+  Fg := ValidatePublicPoint(curve, g);
   Fn := n;
   Fh := h;
   FhInv := Default (TBigInteger);
@@ -192,14 +185,30 @@ begin
 
 end;
 
-class constructor TECDomainParameters.CreateECDomainParameters;
-begin
-  TECDomainParameters.Boot;
-end;
-
-class destructor TECDomainParameters.DestroyECDomainParameters;
+destructor TECDomainParameters.Destroy;
 begin
   FLock.Free;
+  inherited Destroy;
+end;
+
+function TECDomainParameters.ValidatePublicPoint(const q: IECPoint): IECPoint;
+begin
+  result := ValidatePublicPoint(curve, q);
+end;
+
+function TECDomainParameters.ValidatePrivateScalar(const d: TBigInteger)
+  : TBigInteger;
+begin
+  if (not(d.IsInitialized)) then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes(@SScalarNil);
+  end;
+
+  if ((d.CompareTo(TBigInteger.One) < 0) or (d.CompareTo(n) >= 0)) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SScalarInvalidRange);
+  end;
+  result := d;
 end;
 
 function TECDomainParameters.Equals(const other: IECDomainParameters): Boolean;
@@ -218,20 +227,30 @@ begin
   end;
 
   result := curve.Equals(other.curve) and g.Equals(other.g) and
-    n.Equals(other.n) and h.Equals(other.h);
+    n.Equals(other.n);
 
+  if h.IsInitialized then
+  begin
+    result := result and h.Equals(other.h);
+  end;
 end;
 
 function TECDomainParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
-  result := curve.GetHashCode();
-  result := result * 37;
-  result := result xor g.GetHashCode();
-  result := result * 37;
-  result := result xor n.GetHashCode();
-  result := result * 37;
-  result := result xor h.GetHashCode();
+  result := 4;
+  result := result * 257;
+  result := result xor Fcurve.GetHashCode();
+  result := result * 257;
+  result := result xor Fg.GetHashCode();
+  result := result * 257;
+  result := result xor Fn.GetHashCode();
+
+  if h.IsInitialized then
+  begin
+    result := result * 257;
+    result := result xor Fh.GetHashCode();
+  end;
 end;
 
 end.

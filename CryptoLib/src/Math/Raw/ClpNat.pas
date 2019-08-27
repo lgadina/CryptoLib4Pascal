@@ -80,6 +80,14 @@ type
       xOff: Int32; const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
       overload; static;
 
+    class function AddTo(len: Int32; const x: TCryptoLibUInt32Array;
+      xOff: Int32; const z: TCryptoLibUInt32Array; zOff, cIn: Int32): UInt32;
+      overload; static;
+
+    class function AddToEachOther(len: Int32; const u: TCryptoLibUInt32Array;
+      uOff: Int32; const v: TCryptoLibUInt32Array; vOff: Int32): UInt32;
+      overload; static;
+
     class function AddWordAt(len: Int32; x: UInt32;
       const z: TCryptoLibUInt32Array; zPos: Int32): UInt32; overload; static;
 
@@ -93,6 +101,13 @@ type
     class function AddWordTo(len: Int32; x: UInt32;
       const z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload; static;
 
+    class function CAdd(len, mask: Int32; const x, y, z: TCryptoLibUInt32Array)
+      : UInt32; static;
+
+    class procedure CMov(len, mask: Int32; const x: TCryptoLibUInt32Array;
+      xOff: Int32; const z: TCryptoLibUInt32Array; zOff: Int32);
+      overload; static;
+
     class procedure Copy(len: Int32; const x, z: TCryptoLibUInt32Array);
       overload; static; inline;
 
@@ -103,9 +118,26 @@ type
       xOff: Int32; const z: TCryptoLibUInt32Array; zOff: Int32); overload;
       static; inline;
 
+    class procedure Copy64(len: Int32; const x, z: TCryptoLibUInt64Array);
+      overload; static; inline;
+
+    class function Copy64(len: Int32; const x: TCryptoLibUInt64Array)
+      : TCryptoLibUInt64Array; overload; static; inline;
+
+    class procedure Copy64(len: Int32; const x: TCryptoLibUInt64Array;
+      xOff: Int32; const z: TCryptoLibUInt64Array; zOff: Int32); overload;
+      static; inline;
+
     class function Create(len: Int32): TCryptoLibUInt32Array; static; inline;
 
     class function Create64(len: Int32): TCryptoLibUInt64Array; static; inline;
+
+    class function CSub(len, mask: Int32; const x, y, z: TCryptoLibUInt32Array)
+      : UInt32; overload; static;
+
+    class function CSub(len, mask: Int32; const x: TCryptoLibUInt32Array;
+      xOff: Int32; const y: TCryptoLibUInt32Array; yOff: Int32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): UInt32; overload; static;
 
     class function Dec(len: Int32; const z: TCryptoLibUInt32Array): Int32;
       overload; static;
@@ -119,17 +151,27 @@ type
     class function DecAt(len: Int32; const z: TCryptoLibUInt32Array;
       zOff, zPos: Int32): Int32; overload; static;
 
+    class function Diff(len: Int32; const x: TCryptoLibUInt32Array; xOff: Int32;
+      const y: TCryptoLibUInt32Array; yOff: Int32;
+      const z: TCryptoLibUInt32Array; zOff: Int32): Boolean; static;
+
     class function Eq(len: Int32; const x, y: TCryptoLibUInt32Array)
       : Boolean; static;
 
     class function FromBigInteger(bits: Int32; const x: TBigInteger)
       : TCryptoLibUInt32Array; static;
 
+    class function FromBigInteger64(bits: Int32; const x: TBigInteger)
+      : TCryptoLibUInt64Array; static;
+
     class function GetBit(const x: TCryptoLibUInt32Array; bit: Int32)
       : UInt32; static;
 
-    class function Gte(len: Int32; const x, y: TCryptoLibUInt32Array)
-      : Boolean; static;
+    class function Gte(len: Int32; const x, y: TCryptoLibUInt32Array): Boolean;
+      overload; static;
+
+    class function Gte(len: Int32; const x: TCryptoLibUInt32Array; xOff: Int32;
+      const y: TCryptoLibUInt32Array; yOff: Int32): Boolean; overload; static;
 
     class function Inc(len: Int32; const z: TCryptoLibUInt32Array): UInt32;
       overload; static;
@@ -159,6 +201,12 @@ type
     class procedure Mul(const x: TCryptoLibUInt32Array; xOff, xLen: Int32;
       const y: TCryptoLibUInt32Array; yOff, yLen: Int32;
       const zz: TCryptoLibUInt32Array; zzOff: Int32); overload; static;
+
+    class function MulAddTo(len: Int32; const x, y, zz: TCryptoLibUInt32Array)
+      : UInt32; overload; static;
+    class function MulAddTo(len: Int32; const x: TCryptoLibUInt32Array;
+      xOff: Int32; const y: TCryptoLibUInt32Array; yOff: Int32;
+      const zz: TCryptoLibUInt32Array; zzOff: Int32): UInt32; overload; static;
 
     class function Mul31BothAdd(len: Int32; a: UInt32;
       const x: TCryptoLibUInt32Array; b: UInt32;
@@ -253,10 +301,10 @@ type
       xOff: Int32; const zz: TCryptoLibUInt32Array; zzOff: Int32);
       overload; static;
 
-    class function SquareWordAdd(const x: TCryptoLibUInt32Array; xPos: Int32;
+    class function SquareWordAddTo(const x: TCryptoLibUInt32Array; xPos: Int32;
       const z: TCryptoLibUInt32Array): UInt32; overload; static;
 
-    class function SquareWordAdd(const x: TCryptoLibUInt32Array;
+    class function SquareWordAddTo(const x: TCryptoLibUInt32Array;
       xOff, xPos: Int32; const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
       overload; static;
 
@@ -323,8 +371,11 @@ type
     class function ToBigInteger(len: Int32; const x: TCryptoLibUInt32Array)
       : TBigInteger; static;
 
-    class procedure Zero(len: Int32; const z: TCryptoLibUInt32Array);
+    class procedure Zero(len: Int32; const z: TCryptoLibUInt32Array); overload;
       static; inline;
+
+    class procedure Zero(len: Int32; const z: TCryptoLibUInt32Array;
+      zOff: Int32); overload; static; inline;
 
   end;
 
@@ -384,11 +435,9 @@ begin
   I := 0;
 
   repeat
-
     c := c + (xVal * y[yOff + I] + z[zOff + I]);
     z[zOff + I] := UInt32(c);
     c := c shr 32;
-
     System.Inc(I);
   until (not(I < len));
 
@@ -435,11 +484,9 @@ begin
   I := 0;
 
   repeat
-
     c := c + (xVal * y[I]);
     z[I] := UInt32(c);
     c := c shr 32;
-
     System.Inc(I);
   until (not(I < len));
 
@@ -458,25 +505,23 @@ begin
   I := 0;
 
   repeat
-
     c := c + (xVal * y[yOff + I]);
     z[zOff + I] := UInt32(c);
     c := c shr 32;
-
     System.Inc(I);
   until (not(I < len));
 
   Result := UInt32(c);
 end;
 
-class function TNat.SquareWordAdd(const x: TCryptoLibUInt32Array;
+class function TNat.SquareWordAddTo(const x: TCryptoLibUInt32Array;
   xOff, xPos: Int32; const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
 var
   c, xVal: UInt64;
   I: Int32;
 begin
   c := 0;
-  xVal := UInt64(x[xOff + xPos]);
+  xVal := x[xOff + xPos] and M;
   I := 0;
 
   repeat
@@ -490,18 +535,18 @@ begin
   Result := UInt32(c);
 end;
 
-class function TNat.SquareWordAdd(const x: TCryptoLibUInt32Array; xPos: Int32;
+class function TNat.SquareWordAddTo(const x: TCryptoLibUInt32Array; xPos: Int32;
   const z: TCryptoLibUInt32Array): UInt32;
 var
   c, xVal: UInt64;
   I: Int32;
 begin
   c := 0;
-  xVal := UInt64(x[xPos]);
+  xVal := x[xPos] and M;
   I := 0;
 
   repeat
-    c := c + (xVal * x[I] + z[xPos + I]);
+    c := c + (xVal * (x[I] and M) + (z[xPos + I] and M));
     z[xPos + I] := UInt32(c);
     c := c shr 32;
     System.Inc(I);
@@ -788,6 +833,39 @@ begin
   Result := UInt32(c);
 end;
 
+class function TNat.AddTo(len: Int32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; const z: TCryptoLibUInt32Array; zOff, cIn: Int32): UInt32;
+var
+  c: UInt64;
+  I: Int32;
+begin
+  c := cIn and M;
+  for I := 0 to System.Pred(len) do
+  begin
+    c := c + ((x[xOff + I] and M) + (z[zOff + I] and M));
+    z[zOff + I] := UInt32(c);
+    c := c shr 32;
+  end;
+  Result := UInt32(c);
+end;
+
+class function TNat.AddToEachOther(len: Int32; const u: TCryptoLibUInt32Array;
+  uOff: Int32; const v: TCryptoLibUInt32Array; vOff: Int32): UInt32;
+var
+  c: UInt64;
+  I: Int32;
+begin
+  c := 0;
+  for I := 0 to System.Pred(len) do
+  begin
+    c := c + ((u[uOff + I] and M) + (v[vOff + I] and M));
+    u[uOff + I] := UInt32(c);
+    v[vOff + I] := UInt32(c);
+    c := c shr 32;
+  end;
+  Result := UInt32(c);
+end;
+
 class function TNat.AddWordAt(len: Int32; x: UInt32;
   const z: TCryptoLibUInt32Array; zPos: Int32): UInt32;
 var
@@ -874,6 +952,42 @@ begin
 
 end;
 
+class function TNat.CAdd(len, mask: Int32;
+  const x, y, z: TCryptoLibUInt32Array): UInt32;
+var
+  LMASK: UInt32;
+  c: UInt64;
+  I: Int32;
+begin
+  LMASK := UInt32(-(mask and 1));
+
+  c := 0;
+  for I := 0 to System.Pred(len) do
+  begin
+    c := c + (UInt64(x[I]) + (y[I] and LMASK));
+    z[I] := UInt32(c);
+    c := c shr 32;
+  end;
+  Result := UInt32(c);
+end;
+
+class procedure TNat.CMov(len, mask: Int32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; const z: TCryptoLibUInt32Array; zOff: Int32);
+var
+  LMASK, z_i, LDiff: UInt32;
+  I: Int32;
+begin
+  LMASK := UInt32(-(mask and 1));
+
+  for I := 0 to System.Pred(len) do
+  begin
+    z_i := z[zOff + I];
+    LDiff := z_i xor x[xOff + I];
+    z_i := z_i xor ((LDiff and LMASK));
+    z[zOff + I] := z_i;
+  end;
+end;
+
 class function TNat.Copy(len: Int32; const x: TCryptoLibUInt32Array)
   : TCryptoLibUInt32Array;
 begin
@@ -884,6 +998,24 @@ end;
 class procedure TNat.Copy(len: Int32; const x, z: TCryptoLibUInt32Array);
 begin
   System.Move(x[0], z[0], len * System.SizeOf(UInt32));
+end;
+
+class procedure TNat.Copy64(len: Int32; const x: TCryptoLibUInt64Array;
+  xOff: Int32; const z: TCryptoLibUInt64Array; zOff: Int32);
+begin
+  System.Move(x[xOff], z[zOff], len * System.SizeOf(UInt64));
+end;
+
+class function TNat.Copy64(len: Int32; const x: TCryptoLibUInt64Array)
+  : TCryptoLibUInt64Array;
+begin
+  System.SetLength(Result, len);
+  System.Move(x[0], Result[0], len * System.SizeOf(UInt64));
+end;
+
+class procedure TNat.Copy64(len: Int32; const x, z: TCryptoLibUInt64Array);
+begin
+  System.Move(x[0], z[0], len * System.SizeOf(UInt64));
 end;
 
 class procedure TNat.Copy(len: Int32; const x: TCryptoLibUInt32Array;
@@ -900,6 +1032,41 @@ end;
 class function TNat.Create64(len: Int32): TCryptoLibUInt64Array;
 begin
   System.SetLength(Result, len);
+end;
+
+class function TNat.CSub(len, mask: Int32;
+  const x, y, z: TCryptoLibUInt32Array): UInt32;
+var
+  LMASK, c: UInt64;
+  I: Int32;
+begin
+  LMASK := UInt64(-(mask and 1) and M);
+  c := 0;
+  for I := 0 to System.Pred(len) do
+  begin
+    c := c + ((x[I] and M) - (y[I] and LMASK));
+    z[I] := UInt32(c);
+    c := c shr 32;
+  end;
+  Result := UInt32(c);
+end;
+
+class function TNat.CSub(len, mask: Int32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; const y: TCryptoLibUInt32Array; yOff: Int32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): UInt32;
+var
+  LMASK, c: UInt64;
+  I: Int32;
+begin
+  LMASK := UInt64(-(mask and 1) and M);
+  c := 0;
+  for I := 0 to System.Pred(len) do
+  begin
+    c := c + ((x[xOff + I] and M) - (y[yOff + I] and LMASK));
+    z[zOff + I] := UInt32(c);
+    c := c shr 32;
+  end;
+  Result := UInt32(c);
 end;
 
 class function TNat.Dec(len: Int32; const z: TCryptoLibUInt32Array): Int32;
@@ -984,6 +1151,25 @@ begin
   Result := -1;
 end;
 
+class function TNat.Diff(len: Int32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; const y: TCryptoLibUInt32Array; yOff: Int32;
+  const z: TCryptoLibUInt32Array; zOff: Int32): Boolean;
+var
+  pos: Boolean;
+begin
+  pos := Gte(len, x, xOff, y, yOff);
+
+  if (pos) then
+  begin
+    Sub(len, x, xOff, y, yOff, z, zOff);
+  end
+  else
+  begin
+    Sub(len, y, yOff, x, xOff, z, zOff);
+  end;
+  Result := pos;
+end;
+
 class function TNat.Eq(len: Int32; const x, y: TCryptoLibUInt32Array): Boolean;
 var
   I: Int32;
@@ -1014,7 +1200,6 @@ begin
     raise EArgumentCryptoLibException.Create('');
   end;
 
-  // len := (bits + 31) shr 5;
   len := TBits.Asr32((bits + 31), 5);
   Result := Create(len);
   I := 0;
@@ -1026,6 +1211,31 @@ begin
   end;
 end;
 
+class function TNat.FromBigInteger64(bits: Int32; const x: TBigInteger)
+  : TCryptoLibUInt64Array;
+var
+  len, I: Int32;
+  z: TCryptoLibUInt64Array;
+  Lx: TBigInteger;
+begin
+  Lx := x;
+  if ((Lx.SignValue < 0) or (Lx.BitLength > bits)) then
+  begin
+    raise EArgumentCryptoLibException.Create('');
+  end;
+
+  len := (bits + 63) shr 6;
+  z := Create64(len);
+  I := 0;
+  while (Lx.SignValue <> 0) do
+  begin
+    z[I] := Lx.Int64Value;
+    System.Inc(I);
+    Lx := Lx.ShiftRight(64);
+  end;
+  Result := z;
+end;
+
 class function TNat.GetBit(const x: TCryptoLibUInt32Array; bit: Int32): UInt32;
 var
   w, b: Int32;
@@ -1035,7 +1245,7 @@ begin
     Result := x[0] and 1;
     Exit;
   end;
-  // w := bit shr 5;
+
   w := TBits.Asr32(bit, 5);
   if ((w < 0) or (w >= System.Length(x))) then
   begin
@@ -1056,6 +1266,32 @@ begin
   begin
     x_i := x[I];
     y_i := y[I];
+    if (x_i < y_i) then
+    begin
+      Result := false;
+      Exit;
+    end;
+    if (x_i > y_i) then
+    begin
+      Result := true;
+      Exit;
+    end;
+    System.Dec(I);
+  end;
+  Result := true;
+end;
+
+class function TNat.Gte(len: Int32; const x: TCryptoLibUInt32Array; xOff: Int32;
+  const y: TCryptoLibUInt32Array; yOff: Int32): Boolean;
+var
+  I: Int32;
+  x_i, y_i: UInt32;
+begin
+  I := len - 1;
+  while I >= 0 do
+  begin
+    x_i := x[xOff + I];
+    y_i := y[yOff + I];
     if (x_i < y_i) then
     begin
       Result := false;
@@ -1104,7 +1340,6 @@ begin
       begin
         z[I] := x[I];
         System.Inc(I);
-
       end;
       Result := 0;
       Exit;
@@ -1160,7 +1395,6 @@ begin
   zz[len] := MulWord(len, x[0], y, zz);
 
   for I := 1 to System.Pred(len) do
-
   begin
     zz[I + len] := MulWordAddTo(len, x[I], y, 0, zz, I);
   end;
@@ -1196,6 +1430,42 @@ begin
   end;
 end;
 
+class function TNat.MulAddTo(len: Int32;
+  const x, y, zz: TCryptoLibUInt32Array): UInt32;
+var
+  zc: UInt64;
+  I: Int32;
+begin
+  zc := 0;
+  for I := 0 to System.Pred(len) do
+  begin
+    zc := zc + (MulWordAddTo(len, x[I], y, 0, zz, I) and M);
+    zc := zc + (zz[I + len] and M);
+    zz[I + len] := UInt32(zc);
+    zc := zc shr 32;
+  end;
+  Result := UInt32(zc);
+end;
+
+class function TNat.MulAddTo(len: Int32; const x: TCryptoLibUInt32Array;
+  xOff: Int32; const y: TCryptoLibUInt32Array; yOff: Int32;
+  const zz: TCryptoLibUInt32Array; zzOff: Int32): UInt32;
+var
+  zc: UInt64;
+  I: Int32;
+begin
+  zc := 0;
+  for I := 0 to System.Pred(len) do
+  begin
+    zc := zc + (MulWordAddTo(len, x[xOff + I], y, yOff, zz, zzOff) and M);
+    zc := zc + (zz[zzOff + len] and M);
+    zz[zzOff + len] := UInt32(zc);
+    zc := zc shr 32;
+    System.Inc(zzOff);
+  end;
+  Result := UInt32(zc);
+end;
+
 class function TNat.Mul31BothAdd(len: Int32; a: UInt32;
   const x: TCryptoLibUInt32Array; b: UInt32; const y, z: TCryptoLibUInt32Array;
   zOff: Int32): UInt32;
@@ -1209,11 +1479,9 @@ begin
   I := 0;
 
   repeat
-
     c := c + (aVal * x[I] + bVal * y[I] + z[zOff + I]);
     z[zOff + I] := UInt32(c);
     c := c shr 32;
-
     System.Inc(I);
   until (not(I < len));
 
@@ -1401,7 +1669,6 @@ var
   next: UInt32;
 begin
   for I := 0 to System.Pred(len) do
-
   begin
     next := x[I];
     z[I] := (next shl 1) or (c shr 31);
@@ -1417,7 +1684,6 @@ var
   next: UInt32;
 begin
   for I := 0 to System.Pred(len) do
-
   begin
     next := x[xOff + I];
     z[zOff + I] := (next shl 1) or (c shr 31);
@@ -1433,7 +1699,6 @@ var
   next: UInt32;
 begin
   for I := 0 to System.Pred(len) do
-
   begin
     next := z[I];
     z[I] := (next shl 1) or (c shr 31);
@@ -1449,7 +1714,6 @@ var
   next: UInt32;
 begin
   for I := 0 to System.Pred(len) do
-
   begin
     next := z[zOff + I];
     z[zOff + I] := (next shl 1) or (c shr 31);
@@ -1465,7 +1729,6 @@ var
   next: UInt64;
 begin
   for I := 0 to System.Pred(len) do
-
   begin
     next := x[xOff + I];
     z[zOff + I] := (next shl 1) or (c shr 63);
@@ -1586,9 +1849,9 @@ end;
 
 class procedure TNat.Square(len: Int32; const x, zz: TCryptoLibUInt32Array);
 var
-  extLen, j, k, I: Int32;
+  extLen, j, k, I, zzPos: Int32;
   c: UInt32;
-  xVal, p: UInt64;
+  xVal, p, d: UInt64;
 begin
   extLen := len shl 1;
   c := 0;
@@ -1606,21 +1869,33 @@ begin
     c := UInt32(p);
   until (not(j > 0));
 
+  d := 0;
+  zzPos := 2;
+
   for I := 1 to System.Pred(len) do
   begin
-    c := SquareWordAdd(x, I, zz);
-    AddWordAt(extLen, c, zz, I shl 1);
+    d := d + (SquareWordAddTo(x, I, zz) and M);
+    d := d + (zz[zzPos] and M);
+    zz[zzPos] := UInt32(d);
+    System.Inc(zzPos);
+    d := d shr 32;
+    d := d + (zz[zzPos] and M);
+    zz[zzPos] := UInt32(d);
+    System.Inc(zzPos);
+    d := d shr 32;
   end;
-
+{$IFDEF DEBUG}
+  System.Assert(d = 0);
+{$ENDIF DEBUG}
   ShiftUpBit(extLen, zz, x[0] shl 31);
 end;
 
 class procedure TNat.Square(len: Int32; const x: TCryptoLibUInt32Array;
   xOff: Int32; const zz: TCryptoLibUInt32Array; zzOff: Int32);
 var
-  extLen, j, k, I: Int32;
+  extLen, j, k, I, zzPos: Int32;
   c: UInt32;
-  xVal, p: UInt64;
+  xVal, p, d: UInt64;
 begin
   extLen := len shl 1;
   c := 0;
@@ -1629,7 +1904,7 @@ begin
 
   repeat
     System.Dec(j);
-    xVal := UInt64(x[xOff + j]);
+    xVal := x[xOff + j] and M;
     p := xVal * xVal;
     System.Dec(k);
     zz[zzOff + k] := (c shl 31) or UInt32((p shr 33));
@@ -1638,12 +1913,24 @@ begin
     c := UInt32(p);
   until (not(j > 0));
 
+  d := 0;
+  zzPos := zzOff + 2;
+
   for I := 1 to System.Pred(len) do
   begin
-    c := SquareWordAdd(x, xOff, I, zz, zzOff);
-    AddWordAt(extLen, c, zz, zzOff, I shl 1);
+    d := d + (SquareWordAddTo(x, I, zz) and M);
+    d := d + (zz[zzPos] and M);
+    zz[zzPos] := UInt32(d);
+    System.Inc(zzPos);
+    d := d shr 32;
+    d := d + (zz[zzPos] and M);
+    zz[zzPos] := UInt32(d);
+    System.Inc(zzPos);
+    d := d shr 32;
   end;
-
+{$IFDEF DEBUG}
+  System.Assert(d = 0);
+{$ENDIF DEBUG}
   ShiftUpBit(extLen, zz, zzOff, x[xOff] shl 31);
 end;
 
@@ -1656,7 +1943,6 @@ var
 begin
   c := 0;
   for I := 0 to System.Pred(len) do
-
   begin
     c := c + (Int64(x[xOff + I]) - y[yOff + I]);
     z[zOff + I] := UInt32(c);
@@ -1673,7 +1959,6 @@ var
 begin
   c := 0;
   for I := 0 to System.Pred(len) do
-
   begin
     c := c + (Int64(x[I]) - y[I]);
     z[I] := UInt32(c);
@@ -1780,7 +2065,6 @@ var
 begin
   c := 0;
   for I := 0 to System.Pred(len) do
-
   begin
     c := c + (Int64(z[I]) - x[I] - y[I]);
     z[I] := UInt32(c);
@@ -1798,7 +2082,6 @@ var
 begin
   c := 0;
   for I := 0 to System.Pred(len) do
-
   begin
     c := c + (Int64(z[zOff + I]) - x[xOff + I] - y[yOff + I]);
     z[zOff + I] := UInt32(c);
@@ -1906,7 +2189,6 @@ var
 begin
   c := 0;
   for I := 0 to System.Pred(len) do
-
   begin
     c := c + (Int64(z[I]) - x[I]);
     z[I] := UInt32(c);
@@ -1923,7 +2205,6 @@ var
 begin
   c := 0;
   for I := 0 to System.Pred(len) do
-
   begin
     c := c + (Int64(z[zOff + I]) - x[xOff + I]);
     z[zOff + I] := UInt32(c);
@@ -2025,7 +2306,6 @@ var
 begin
   System.SetLength(bs, len shl 2);
   for I := 0 to System.Pred(len) do
-
   begin
     x_i := x[I];
     if (x_i <> 0) then
@@ -2041,6 +2321,12 @@ end;
 class procedure TNat.Zero(len: Int32; const z: TCryptoLibUInt32Array);
 begin
   TArrayUtils.Fill(z, 0, len, UInt32(0));
+end;
+
+class procedure TNat.Zero(len: Int32; const z: TCryptoLibUInt32Array;
+  zOff: Int32);
+begin
+  TArrayUtils.Fill(z, zOff, zOff + len, UInt32(0));
 end;
 
 end.

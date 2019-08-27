@@ -31,11 +31,20 @@ uses
   ClpIAsn1Objects,
   ClpDsaKeyPairGenerator,
   ClpIDsaKeyPairGenerator,
+  ClpDHKeyPairGenerator,
+  ClpIDHKeyPairGenerator,
+  ClpEd25519KeyPairGenerator,
+  ClpIEd25519KeyPairGenerator,
+  ClpEd25519Blake2BKeyPairGenerator,
+  ClpIEd25519Blake2BKeyPairGenerator,
+  ClpX25519KeyPairGenerator,
+  ClpIX25519KeyPairGenerator,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpNistObjectIdentifiers,
   ClpIanaObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
   ClpRosstandartObjectIdentifiers,
+  ClpEdECObjectIdentifiers,
   ClpStringUtils,
   ClpCryptoLibTypes;
 
@@ -125,10 +134,10 @@ class procedure TGeneratorUtilities.AddKgAlgorithm(const canonicalName: String;
 var
   alias: string;
 begin
-  FkgAlgorithms.Add(canonicalName, canonicalName);
+  FkgAlgorithms.Add(UpperCase(canonicalName), canonicalName);
   for alias in aliases do
   begin
-    FkgAlgorithms.Add(alias, canonicalName);
+    FkgAlgorithms.Add(UpperCase(alias), canonicalName);
   end;
 
 end;
@@ -138,10 +147,10 @@ class procedure TGeneratorUtilities.AddKpgAlgorithm(const canonicalName: String;
 var
   alias: string;
 begin
-  FkpgAlgorithms.Add(canonicalName, canonicalName);
+  FkpgAlgorithms.Add(UpperCase(canonicalName), canonicalName);
   for alias in aliases do
   begin
-    FkpgAlgorithms.Add(alias, canonicalName);
+    FkpgAlgorithms.Add(UpperCase(alias), canonicalName);
   end;
 
 end;
@@ -159,7 +168,7 @@ begin
 
   for alias in aliases do
   begin
-    FkgAlgorithms.Add(alias, mainName);
+    FkgAlgorithms.Add(UpperCase(alias), mainName);
   end;
 
 end;
@@ -218,6 +227,12 @@ begin
   AddHMacKeyGenerator('SHA512/224', []);
   AddHMacKeyGenerator('SHA512/256', []);
 
+  AddHMacKeyGenerator('KECCAK224', []);
+  AddHMacKeyGenerator('KECCAK256', []);
+  AddHMacKeyGenerator('KECCAK288', []);
+  AddHMacKeyGenerator('KECCAK384', []);
+  AddHMacKeyGenerator('KECCAK512', []);
+
   AddHMacKeyGenerator('SHA3-224',
     [TNistObjectIdentifiers.IdHMacWithSha3_224.ID]);
   AddHMacKeyGenerator('SHA3-256',
@@ -241,21 +256,32 @@ begin
   // key pair generators.
   //
 
+  AddKpgAlgorithm('DH', ['DIFFIEHELLMAN']);
   AddKpgAlgorithm('DSA', []);
   AddKpgAlgorithm('ECDH', ['ECIES']);
+  AddKpgAlgorithm('ECDHC', []);
   AddKpgAlgorithm('ECDSA', []);
+
+  TEdECObjectIdentifiers.Boot;
+
+  AddKpgAlgorithm('Ed25519', ['Ed25519ctx', 'Ed25519ph',
+    TEdECObjectIdentifiers.id_Ed25519.ID]);
+  AddKpgAlgorithm('Ed25519Blake2B', ['Ed25519Blake2Bctx', 'Ed25519Blake2Bph']);
+  AddKpgAlgorithm('X25519', [TEdECObjectIdentifiers.id_X25519.ID]);
 
   AddDefaultKeySizeEntries(128, ['AES128', 'BLOWFISH', 'HMACMD2', 'HMACMD4',
     'HMACMD5', 'HMACRIPEMD128', 'SALSA20']);
   AddDefaultKeySizeEntries(160, ['HMACRIPEMD160', 'HMACSHA1']);
   AddDefaultKeySizeEntries(192, ['AES', 'AES192', 'HMACTIGER']);
-  AddDefaultKeySizeEntries(224, ['HMACSHA3-224', 'HMACSHA224',
+  AddDefaultKeySizeEntries(224, ['HMACSHA3-224', 'HMACKECCAK224', 'HMACSHA224',
     'HMACSHA512/224']);
   AddDefaultKeySizeEntries(256, ['AES256', 'HMACGOST3411-2012-256',
-    'HMACSHA3-256', 'HMACSHA256', 'HMACSHA512/256']);
-  AddDefaultKeySizeEntries(384, ['HMACSHA3-384', 'HMACSHA384']);
+    'HMACSHA3-256', 'HMACKECCAK256', 'HMACSHA256', 'HMACSHA512/256']);
+  AddDefaultKeySizeEntries(288, ['HMACKECCAK288']);
+  AddDefaultKeySizeEntries(384, ['HMACSHA3-384', 'HMACKECCAK384',
+    'HMACSHA384']);
   AddDefaultKeySizeEntries(512, ['HMACGOST3411-2012-512', 'HMACSHA3-512',
-    'HMACSHA512']);
+    'HMACKECCAK512', 'HMACSHA512']);
 end;
 
 class constructor TGeneratorUtilities.CreateGeneratorUtilities;
@@ -362,6 +388,12 @@ begin
       (@SKeyPairGeneratorAlgorithmNotRecognised, [algorithm]);
   end;
 
+  if (canonicalName = 'DH') then
+  begin
+    result := TDHKeyPairGenerator.Create() as IDHKeyPairGenerator;
+    Exit;
+  end;
+
   if (canonicalName = 'DSA') then
   begin
     result := TDsaKeyPairGenerator.Create() as IDsaKeyPairGenerator;
@@ -372,6 +404,25 @@ begin
   if TStringUtils.BeginsWith(canonicalName, 'EC', True) then
   begin
     result := TECKeyPairGenerator.Create(canonicalName) as IECKeyPairGenerator;
+    Exit;
+  end;
+
+  if (canonicalName = 'Ed25519') then
+  begin
+    result := TEd25519KeyPairGenerator.Create() as IEd25519KeyPairGenerator;
+    Exit;
+  end;
+
+  if (canonicalName = 'Ed25519Blake2B') then
+  begin
+    result := TEd25519Blake2BKeyPairGenerator.Create()
+      as IEd25519Blake2BKeyPairGenerator;
+    Exit;
+  end;
+
+  if (canonicalName = 'X25519') then
+  begin
+    result := TX25519KeyPairGenerator.Create() as IX25519KeyPairGenerator;
     Exit;
   end;
 

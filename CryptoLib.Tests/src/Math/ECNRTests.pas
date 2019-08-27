@@ -35,46 +35,49 @@ uses
   ClpIAsn1Objects,
   ClpIECC,
   ClpECC,
+  ClpIDigest,
   ClpECNRSigner,
   ClpIECNRSigner,
   ClpECDomainParameters,
   ClpIECDomainParameters,
+  ClpIECKeyGenerationParameters,
+  ClpECKeyGenerationParameters,
   ClpECPrivateKeyParameters,
   ClpIECPrivateKeyParameters,
   ClpECPublicKeyParameters,
   ClpIECPublicKeyParameters,
+  ClpECKeyPairGenerator,
+  ClpIECKeyPairGenerator,
   ClpISigner,
+  ClpIX9ECParameters,
+  ClpIAsymmetricCipherKeyPair,
+  ClpECNamedCurveTable,
   ClpParametersWithRandom,
   ClpIParametersWithRandom,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpFixedSecureRandom,
-  ClpEncoders,
   ClpSignerUtilities,
   ClpBigInteger,
+  ClpBigIntegers,
   ClpConverters,
-  ClpCryptoLibTypes;
-
-type
-
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
+  ClpCryptoLibTypes,
+  ClpDigestUtilities,
+  CryptoLibTestBase;
 
 type
 
   /// <summary>
   /// ECNR tests.
   /// </summary>
-  TTestECNR = class(TCryptoLibTestCase)
+  TTestECNR = class(TCryptoLibAlgorithmTestCase)
   private
 
     procedure DoCheckSignature(size: Int32; const sKey: IECPrivateKeyParameters;
       const vKey: IECPublicKeyParameters; const sgr: ISigner;
-      const k: ISecureRandom; const &message: TCryptoLibByteArray;
-      const r, s: TBigInteger);
+      const k: ISecureRandom; const &message: TBytes; const r, s: TBigInteger);
 
-    function DoDerDecode(const encoding: TCryptoLibByteArray)
+    function DoDerDecode(const encoding: TBytes)
       : TCryptoLibGenericArray<TBigInteger>;
 
   protected
@@ -128,6 +131,8 @@ type
     /// </summary>
     procedure TestECNR521bitPrimeSHA512; // SecP521r1
 
+    procedure TestRange;
+
   end;
 
 implementation
@@ -136,8 +141,8 @@ implementation
 
 procedure TTestECNR.DoCheckSignature(size: Int32;
   const sKey: IECPrivateKeyParameters; const vKey: IECPublicKeyParameters;
-  const sgr: ISigner; const k: ISecureRandom;
-  const &message: TCryptoLibByteArray; const r, s: TBigInteger);
+  const sgr: ISigner; const k: ISecureRandom; const &message: TBytes;
+  const r, s: TBigInteger);
 var
   sigBytes: TBytes;
   sig: TCryptoLibGenericArray<TBigInteger>;
@@ -175,7 +180,7 @@ begin
   end;
 end;
 
-function TTestECNR.DoDerDecode(const encoding: TCryptoLibByteArray)
+function TTestECNR.DoDerDecode(const encoding: TBytes)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   s: IAsn1Sequence;
@@ -232,8 +237,8 @@ begin
     TBigInteger.One);
 
   parameters := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
-    ('03188DA80EB03090F67CBF20EB43A18800F4FF0AFD82FF1012')), // G
+    curve.DecodePoint
+    (DecodeHex('03188DA80EB03090F67CBF20EB43A18800F4FF0AFD82FF1012')), // G
     TBigInteger.Create
     ('6277101735386680763835789423176059013767194773182842284081')
     // n
@@ -246,8 +251,8 @@ begin
     parameters);
 
   pubKey := TECPublicKeyParameters.Create
-    (curve.DecodePoint(THex.Decode
-    ('0262B12D60690CDCF330BABAB6E69763B471F994DD702D16A5')), // Q
+    (curve.DecodePoint
+    (DecodeHex('0262B12D60690CDCF330BABAB6E69763B471F994DD702D16A5')), // Q
     parameters);
 
   sgr := TSignerUtilities.GetSigner('SHA1withECNR');
@@ -295,7 +300,8 @@ begin
     TBigInteger.One);
 
   parameters := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf')), // G
     n, TBigInteger.One);
 
@@ -328,7 +334,8 @@ begin
 
   // Verify the signature
   pubKey := TECPublicKeyParameters.Create
-    (curve.DecodePoint(THex.Decode
+    (curve.DecodePoint
+    (DecodeHex
     ('025b6dc53bc61a2548ffb0f671472de6c9521a9d2d2534e65abfcbd5fe0c70')), // Q
     parameters);
 
@@ -373,7 +380,8 @@ begin
     TBigInteger.One);
 
   parameters := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
+    curve.DecodePoint
+    (DecodeHex
     ('020ffa963cdca8816ccc33b8642bedf905c3d358573d3f27fbbd3b3cb9aaaf')), // G
     TBigInteger.Create
     ('883423532389192164791648750360308884807550341691627752275345424702807307'),
@@ -387,7 +395,8 @@ begin
     parameters);
 
   pubKey := TECPublicKeyParameters.Create
-    (curve.DecodePoint(THex.Decode
+    (curve.DecodePoint
+    (DecodeHex
     ('025b6dc53bc61a2548ffb0f671472de6c9521a9d2d2534e65abfcbd5fe0c70')), // Q
     parameters);
 
@@ -430,15 +439,16 @@ begin
     ('0051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00',
     16), // b
     TBigInteger.Create(1,
-    THex.Decode
-    ('01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA51868783BF2F966B7FCC0148F709A5D03BB5C9B8899C47AEBB6FB71E91386409')
+    DecodeHex(
+    '01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA51868783BF2F966B7FCC0148F709A5D03BB5C9B8899C47AEBB6FB71E91386409')
     ), TBigInteger.One);
   // b
 
   parameters := TECDomainParameters.Create(curve,
-    curve.DecodePoint(THex.Decode
-    ('0200C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2FFA8DE3348B3C1856A429BF97E7E31C2E5BD66')
-    ), // G
+    curve.DecodePoint
+    (DecodeHex
+    ('0200C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2FFA8DE3348B3C1856A429BF97E7E31C2E5BD66')),
+    // G
     TBigInteger.Create
     ('01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA51868783BF2F966B7FCC0148F709A5D03BB5C9B8899C47AEBB6FB71E91386409',
     16)
@@ -452,15 +462,89 @@ begin
     parameters);
 
   pubKey := TECPublicKeyParameters.Create
-    (curve.DecodePoint(THex.Decode
-    ('02006BFDD2C9278B63C92D6624F151C9D7A822CC75BD983B17D25D74C26740380022D3D8FAF304781E416175EADF4ED6E2B47142D2454A7AC7801DD803CF44A4D1F0AC')
-    ), // Q
+    (curve.DecodePoint
+    (DecodeHex
+    ('02006BFDD2C9278B63C92D6624F151C9D7A822CC75BD983B17D25D74C26740380022D3D8FAF304781E416175EADF4ED6E2B47142D2454A7AC7801DD803CF44A4D1F0AC')),
+    // Q
     parameters);
 
   sgr := TSignerUtilities.GetSigner('SHA512withECNR');
   &message := TConverters.ConvertStringToBytes('abc', TEncoding.UTF8);
 
   DoCheckSignature(521, priKey, pubKey, sgr, k, &message, r, s);
+end;
+
+procedure TTestECNR.TestRange;
+var
+  myGenerator: IECKeyPairGenerator;
+  myRandom: ISecureRandom;
+  myCurve: String;
+  x9: IX9ECParameters;
+  myDomain: IECDomainParameters;
+  myParams: IECKeyGenerationParameters;
+  myPair: IAsymmetricCipherKeyPair;
+  myDigest: IDigest;
+  myArtifact, myMessage, msg: TCryptoLibByteArray;
+  signer: IECNRSigner;
+  order: TBigInteger;
+  sig: TCryptoLibGenericArray<TBigInteger>;
+begin
+  // Create the generator
+  myGenerator := TECKeyPairGenerator.Create();
+  myRandom := TSecureRandom.Create();
+  myCurve := 'brainpoolP192t1';
+
+  // Lookup the parameters
+  x9 := TECNamedCurveTable.GetByName(myCurve);
+
+  // Initialise the generator
+  myDomain := TECDomainParameters.Create(x9.curve, x9.G, x9.n, x9.H,
+    x9.GetSeed());
+  myParams := TECKeyGenerationParameters.Create(myDomain, myRandom);
+  myGenerator.Init(myParams);
+
+  // Create the key Pair
+  myPair := myGenerator.GenerateKeyPair();
+
+  // Create the digest and the output buffer
+  myDigest := TDigestUtilities.GetDigest('TIGER');
+  System.SetLength(myArtifact, myDigest.GetDigestSize);
+  myMessage := TConverters.ConvertStringToBytes
+    ('Hello there. How is life treating you?', TEncoding.ASCII);
+
+  myDigest.BlockUpdate(myMessage, 0, System.Length(myMessage));
+  myDigest.DoFinal(myArtifact, 0);
+
+  // Create signer
+  signer := TECNRSigner.Create();
+  signer.Init(true, myPair.Private);
+
+  try
+    signer.GenerateSignature(myArtifact);
+    Fail('out of range input not caught');
+  except
+    on e: EDataLengthCryptoLibException do
+    begin
+      CheckEquals(e.Message, 'Input Too Large For ECNR Key.');
+    end;
+
+  end;
+
+  //
+  // check upper bound
+  order := (myPair.Public as IECPublicKeyParameters).parameters.n;
+
+  signer.Init(true, myPair.Private);
+  msg := TBigIntegers.AsUnsignedByteArray(order.Subtract(TBigInteger.One));
+  sig := signer.GenerateSignature(msg);
+
+  signer.Init(false, myPair.getPublic());
+  if (not signer.VerifySignature(msg, sig[0], sig[1])) then
+  begin
+    Fail('ECNR failed 2');
+  end;
+
+  CheckTrue(AreEqual(msg, signer.getRecoveredMessage(sig[0], sig[1])));
 end;
 
 initialization

@@ -32,21 +32,18 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpCryptoLibTypes,
+  ClpAESPRNGRandom,
   ClpSecureRandom,
   ClpISecureRandom,
+  ClpRandomNumberGenerator,
   ClpCryptoApiRandomGenerator,
-  ClpICryptoApiRandomGenerator;
+  ClpICryptoApiRandomGenerator,
+  ClpCryptoLibTypes,
+  CryptoLibTestBase;
 
 type
 
-  TCryptoLibTestCase = class abstract(TTestCase)
-
-  end;
-
-type
-
-  TTestSecureRandom = class(TCryptoLibTestCase)
+  TTestSecureRandom = class(TCryptoLibAlgorithmTestCase)
   private
 
     procedure CheckSecureRandom(const random: ISecureRandom);
@@ -59,6 +56,9 @@ type
     procedure TearDown; override;
   published
     procedure TestCryptoApi();
+    procedure TestOSRandom();
+    procedure TestAESPRNG();
+    procedure TestAESPRNGRandom();
     procedure TestDefault();
     procedure TestSha1Prng();
     procedure TestSha256Prng();
@@ -80,7 +80,7 @@ end;
 function TTestSecureRandom.MeasureChiSquared(const random: ISecureRandom;
   rounds: Int32): Double;
 var
-  opts, bs: TCryptoLibByteArray;
+  opts, bs: TBytes;
   counts: TCryptoLibInt32Array;
   I, b, total, k, mask, shift: Int32;
   chi2, diff, diff2, temp: Double;
@@ -191,6 +191,66 @@ end;
 procedure TTestSecureRandom.TearDown;
 begin
   inherited;
+
+end;
+
+procedure TTestSecureRandom.TestOSRandom;
+var
+  &random: ISecureRandom;
+begin
+  random := TSecureRandom.Create(TCryptoApiRandomGenerator.Create
+    (TRandomNumberGenerator.CreateRNG
+    (TRandomNumberGenerator.TRandomNumberGeneratorMode.rngmOS))
+    as ICryptoApiRandomGenerator);
+
+  CheckSecureRandom(random);
+end;
+
+procedure TTestSecureRandom.TestAESPRNG;
+var
+  &random: ISecureRandom;
+begin
+  random := TSecureRandom.Create(TCryptoApiRandomGenerator.Create
+    (TRandomNumberGenerator.CreateRNG
+    (TRandomNumberGenerator.TRandomNumberGeneratorMode.rngmAES))
+    as ICryptoApiRandomGenerator);
+
+  CheckSecureRandom(random);
+end;
+
+procedure TTestSecureRandom.TestAESPRNGRandom;
+var
+  b1, b2, NilBytes: TBytes;
+  a1, a2: IAESPRNGRandom;
+  Idx: Int32;
+begin
+  // it is hard to validate randomness - we just test the feature set
+  System.SetLength(b1, 16);
+  System.SetLength(b2, 16);
+  NilBytes := Nil;
+  TAESPRNGRandom.GetBytes(b1);
+  TAESPRNGRandom.GetBytes(b2);
+
+  CheckTrue(not AreEqual(b1, b2));
+
+  a1 := TAESPRNGRandom.Create();
+  a2 := TAESPRNGRandom.Create();
+
+  a1.FillBytes(b1);
+  a2.FillBytes(b2);
+  CheckTrue(not AreEqual(b1, b2));
+  a1.FillBytes(NilBytes);
+  CheckEquals(System.Length(NilBytes), 0);
+
+  for Idx := 1 to 10000 do
+  begin
+    System.SetLength(b1, Idx);
+    System.SetLength(b2, Idx);
+    a1.FillBytes(b1);
+    a2.FillBytes(b2);
+
+    CheckTrue(not AreEqual(b1, b2));
+  end;
 
 end;
 

@@ -28,7 +28,8 @@ uses
   ClpIGlvTypeBEndomorphism,
   ClpIECC,
   ClpIGlvTypeBParameters,
-  ClpIGlvEndomorphism;
+  ClpIGlvEndomorphism,
+  ClpECCompUtilities;
 
 type
   TGlvTypeBEndomorphism = class(TInterfacedObject, IECEndomorphism,
@@ -40,17 +41,13 @@ type
 
   strict protected
   var
-    Fm_parameters: IGlvTypeBParameters;
-    Fm_pointMap: IECPointMap;
-    Fm_curve: IECCurve;
-
-    function CalculateB(const k, g: TBigInteger; t: Int32)
-      : TBigInteger; virtual;
+    FParameters: IGlvTypeBParameters;
+    FPointMap: IECPointMap;
 
   public
     constructor Create(const curve: IECCurve;
       const parameters: IGlvTypeBParameters);
-    destructor Destroy; override;
+
     function DecomposeScalar(const k: TBigInteger)
       : TCryptoLibGenericArray<TBigInteger>; virtual;
 
@@ -62,61 +59,23 @@ implementation
 
 { TGlvTypeBEndomorphism }
 
-function TGlvTypeBEndomorphism.CalculateB(const k, g: TBigInteger; t: Int32)
-  : TBigInteger;
-var
-  negative, extra: Boolean;
-  b: TBigInteger;
-begin
-  negative := (g.SignValue < 0);
-  b := k.Multiply(g.Abs());
-  extra := b.TestBit(t - 1);
-  b := b.ShiftRight(t);
-  if (extra) then
-  begin
-    b := b.Add(TBigInteger.One);
-  end;
-  if negative then
-  begin
-    Result := b.Negate();
-  end
-  else
-  begin
-    Result := b;
-  end;
-end;
-
 constructor TGlvTypeBEndomorphism.Create(const curve: IECCurve;
   const parameters: IGlvTypeBParameters);
 begin
   Inherited Create();
-  Fm_curve := curve;
-  Fm_parameters := parameters;
-  Fm_pointMap := TScaleXPointMap.Create(curve.FromBigInteger(parameters.Beta));
+  (*
+    * NOTE: 'curve' MUST only be used to create a suitable ECFieldElement. Due to the way
+    * ECCurve configuration works, 'curve' will not be the actual instance of ECCurve that the
+    * endomorphism is being used with.
+  *)
+  FParameters := parameters;
+  FPointMap := TScaleXPointMap.Create(curve.FromBigInteger(parameters.Beta));
 end;
 
 function TGlvTypeBEndomorphism.DecomposeScalar(const k: TBigInteger)
   : TCryptoLibGenericArray<TBigInteger>;
-var
-  bits: Int32;
-  b1, b2, a, b: TBigInteger;
-  v1, v2: TCryptoLibGenericArray<TBigInteger>;
 begin
-  bits := Fm_parameters.bits;
-  b1 := CalculateB(k, Fm_parameters.G1, bits);
-  b2 := CalculateB(k, Fm_parameters.G2, bits);
-
-  v1 := Fm_parameters.v1;
-  v2 := Fm_parameters.v2;
-  a := k.Subtract((b1.Multiply(v1[0])).Add(b2.Multiply(v2[0])));
-  b := (b1.Multiply(v1[1])).Add(b2.Multiply(v2[1])).Negate();
-
-  Result := TCryptoLibGenericArray<TBigInteger>.Create(a, b);
-end;
-
-destructor TGlvTypeBEndomorphism.Destroy;
-begin
-  inherited Destroy;
+  Result := TEndoUtilities.DecomposeScalar(FParameters.SplitParams, k);
 end;
 
 function TGlvTypeBEndomorphism.GetHasEfficientPointMap: Boolean;
@@ -126,7 +85,7 @@ end;
 
 function TGlvTypeBEndomorphism.GetPointMap: IECPointMap;
 begin
-  Result := Fm_pointMap;
+  Result := FPointMap;
 end;
 
 end.

@@ -37,6 +37,7 @@ type
   EInvalidParameterCryptoLibException = class(ECryptoLibException);
   EIndexOutOfRangeCryptoLibException = class(ECryptoLibException);
   EArgumentCryptoLibException = class(ECryptoLibException);
+  EInvalidArgumentCryptoLibException = class(ECryptoLibException);
   EArgumentNilCryptoLibException = class(ECryptoLibException);
   EArgumentOutOfRangeCryptoLibException = class(ECryptoLibException);
   ENullReferenceCryptoLibException = class(ECryptoLibException);
@@ -53,7 +54,7 @@ type
   EInvalidCipherTextCryptoLibException = class(ECryptoLibException);
   EStreamCryptoLibException = class(ECryptoLibException);
   ESecurityUtilityCryptoLibException = class(ECryptoLibException);
-  EAccessCryptoLibException = class(ECryptoLibException);
+  EOSRandomCryptoLibException = class(ECryptoLibException);
   EDataLengthCryptoLibException = class(ECryptoLibException);
   EMaxBytesExceededCryptoLibException = class(ECryptoLibException);
   EOutputLengthCryptoLibException = class(ECryptoLibException);
@@ -207,15 +208,23 @@ type
   TCryptoLibMatrixUInt64Array = array of TCryptoLibUInt64Array;
 {$ENDIF DELPHIXE_UP}
 
-  TCustomArrayBuffer<T> = record
+  TCryptoLibCustomArrayBuffer<T> = record
+  private
+    FData: TCryptoLibGenericArray<T>;
+    FLength: Int32;
+    FIsNil: Boolean;
+
   public
-    Data: TCryptoLibGenericArray<T>;
-    Length: Int32;
-    IsNil: Boolean;
+    property Data: TCryptoLibGenericArray<T> read FData write FData;
+    property Length: Int32 read FLength write FLength;
+    property IsNil: Boolean read FIsNil write FIsNil;
   end;
 
+  TCryptoLibCustomByteArrayBuffer = TCryptoLibCustomArrayBuffer<Byte>;
+
 const
-  EmptyBytesNotNil: TCustomArrayBuffer<Byte> = (Data: Nil; Length: 0; IsNil: False);
+  EmptyBytesNil: TCryptoLibCustomByteArrayBuffer = (FData: Nil; FLength: 0;
+    FIsNil: True);
 
 implementation
 

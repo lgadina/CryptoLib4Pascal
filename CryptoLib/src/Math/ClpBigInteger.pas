@@ -49,6 +49,8 @@ resourcestring
   SBadCharacterRadix8 = 'Bad Character in radix 8 string: %s';
   SBadCharacterRadix2 = 'Bad Character in radix 2 string: %s';
   SUnSupportedBase = 'Only bases 2, 8, 10, 16 are allowed';
+  SBigIntegerOutOfInt32Range = 'BigInteger out of Int32 range';
+  SBigIntegerOutOfInt64Range = 'BigInteger out of Int64 range';
 
 type
 {$SCOPEDENUMS ON}
@@ -125,6 +127,8 @@ type
     function GetBitCount: Int32; inline;
     function GetInt32Value: Int32; inline;
     function GetInt64Value: Int64; inline;
+    function GetInt32ValueExact: Int32; inline;
+    function GetInt64ValueExact: Int64; inline;
     function GetIsInitialized: Boolean; inline;
     function GetSignValue: Int32; inline;
 
@@ -342,6 +346,8 @@ type
     property IsInitialized: Boolean read GetIsInitialized;
     property Int32Value: Int32 read GetInt32Value;
     property Int64Value: Int64 read GetInt64Value;
+    property Int32ValueExact: Int32 read GetInt32ValueExact;
+    property Int64ValueExact: Int64 read GetInt64ValueExact;
     property SignValue: Int32 read GetSignValue;
 
     class property Zero: TBigInteger read GetZero;
@@ -424,6 +430,7 @@ type
     function SetBit(n: Int32): TBigInteger;
     function ClearBit(n: Int32): TBigInteger;
     function FlipBit(n: Int32): TBigInteger;
+    function IsEven(): Boolean; inline;
 
     function GetLowestSetBit(): Int32;
 
@@ -434,6 +441,8 @@ type
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
     inline;
 {$ENDIF DELPHI}
+    function Clone(): TBigInteger; inline;
+
     class function BitCnt(i: Int32): Int32; static;
 
     /// <summary>
@@ -651,6 +660,24 @@ begin
     Exit;
   end;
 
+end;
+
+function TBigInteger.GetInt32ValueExact: Int32;
+begin
+  if (BitLength > 31) then
+  begin
+    raise EArithmeticCryptoLibException.CreateRes(@SBigIntegerOutOfInt32Range);
+  end;
+  Result := Int32Value;
+end;
+
+function TBigInteger.GetInt64ValueExact: Int64;
+begin
+  if (BitLength > 63) then
+  begin
+    raise EArithmeticCryptoLibException.CreateRes(@SBigIntegerOutOfInt64Range);
+  end;
+  Result := Int64Value;
 end;
 
 function TBigInteger.GetIsInitialized: Boolean;
@@ -1958,6 +1985,11 @@ begin
   Result := &Xor(One.ShiftLeft(n));
 end;
 
+function TBigInteger.IsEven(): Boolean;
+begin
+  Result := not(TestBit(0));
+end;
+
 function TBigInteger.Gcd(const value: TBigInteger): TBigInteger;
 var
   r, u, v: TBigInteger;
@@ -2038,6 +2070,17 @@ begin
     Result := hc;
   end;
 
+end;
+
+function TBigInteger.Clone(): TBigInteger;
+begin
+  Result := Default (TBigInteger);
+  Result.Fmagnitude := System.Copy(Fmagnitude);
+  Result.Fsign := Fsign;
+  Result.FnBits := FnBits;
+  Result.FnBitLength := FnBitLength;
+  Result.FmQuote := FmQuote;
+  Result.FIsInitialized := FIsInitialized;
 end;
 
 function TBigInteger.GetLowestSetBit: Int32;
@@ -2132,7 +2175,7 @@ end;
 
 function TBigInteger.IsEqualMagnitude(const x: TBigInteger): Boolean;
 var
-  i: Integer;
+  i: Int32;
   xMag: TCryptoLibInt32Array;
 begin
   xMag := x.Fmagnitude;

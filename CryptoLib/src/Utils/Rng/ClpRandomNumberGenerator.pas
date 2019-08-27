@@ -24,21 +24,27 @@ interface
 uses
   ClpCryptoLibTypes,
   ClpOSRandom,
-  ClpPcgRandomMinimal,
+  ClpAESPRNGRandom,
   ClpIRandomNumberGenerator;
 
 resourcestring
   SUnknownAlgorithm = 'Unknown Random Generation Algorithm Requested';
+  SRandomNumberGeneratorOutputBufferNil =
+    'Random Number Generator Output Buffer Cannot Be Nil';
 
 type
   TRandomNumberGenerator = class abstract(TInterfacedObject,
     IRandomNumberGenerator)
 
+  strict protected
+    class procedure ValidateOutputBufferNotNull(const ABuffer
+      : TCryptoLibByteArray); static; inline;
+
   public
 
     type
 {$SCOPEDENUMS ON}
-    TRandomNumberGeneratorMode = (rngmOS = 0, rngmPCG = 1);
+    TRandomNumberGeneratorMode = (rngmOS = 0, rngmAES = 1);
 {$SCOPEDENUMS OFF}
   class function CreateRNG(): IRandomNumberGenerator; overload; static;
 
@@ -65,8 +71,8 @@ type
   end;
 
 type
-  TPCGRandomNumberGenerator = class sealed(TRandomNumberGenerator,
-    IPCGRandomNumberGenerator)
+  TAESPRNGRandomNumberGenerator = class sealed(TRandomNumberGenerator,
+    IAESPRNGRandomNumberGenerator)
 
   public
     constructor Create();
@@ -80,6 +86,16 @@ type
 implementation
 
 { TRandomNumberGenerator }
+
+class procedure TRandomNumberGenerator.ValidateOutputBufferNotNull
+  (const ABuffer: TCryptoLibByteArray);
+begin
+  if ABuffer = Nil then
+  begin
+    raise EArgumentNilCryptoLibException.CreateRes
+      (@SRandomNumberGeneratorOutputBufferNil);
+  end;
+end;
 
 class function TRandomNumberGenerator.CreateRNG: IRandomNumberGenerator;
 begin
@@ -97,9 +113,9 @@ begin
         Exit;
       end;
 
-    TRandomNumberGeneratorMode.rngmPCG:
+    TRandomNumberGeneratorMode.rngmAES:
       begin
-        result := TPCGRandomNumberGenerator.Create();
+        result := TAESPRNGRandomNumberGenerator.Create();
         Exit;
       end
 
@@ -121,52 +137,36 @@ end;
 
 procedure TOSRandomNumberGenerator.GetBytes(const data: TCryptoLibByteArray);
 begin
+  ValidateOutputBufferNotNull(data);
   TOSRandom.GetBytes(data);
 end;
 
 procedure TOSRandomNumberGenerator.GetNonZeroBytes
   (const data: TCryptoLibByteArray);
 begin
+  ValidateOutputBufferNotNull(data);
   TOSRandom.GetNonZeroBytes(data);
 end;
 
-{ TPCGRandomNumberGenerator }
+{ TAESPRNGRandomNumberGenerator }
 
-constructor TPCGRandomNumberGenerator.Create;
+constructor TAESPRNGRandomNumberGenerator.Create;
 begin
   inherited Create();
 end;
 
-procedure TPCGRandomNumberGenerator.GetBytes(const data: TCryptoLibByteArray);
-var
-  i: Int64;
+procedure TAESPRNGRandomNumberGenerator.GetBytes
+  (const data: TCryptoLibByteArray);
 begin
-  i := System.Length(data);
-  while i > 0 do
-  begin
-    data[i - 1] := Byte(TPcg.NextInt(System.Low(Int32), System.High(Int32)));
-    System.Dec(i);
-  end;
-
+  ValidateOutputBufferNotNull(data);
+  TAESPRNGRandom.GetBytes(data);
 end;
 
-procedure TPCGRandomNumberGenerator.GetNonZeroBytes
+procedure TAESPRNGRandomNumberGenerator.GetNonZeroBytes
   (const data: TCryptoLibByteArray);
-var
-  i: Int64;
-  val: Byte;
 begin
-  i := System.Length(data);
-  while i > 0 do
-  begin
-    repeat
-      val := Byte(TPcg.NextUInt32(System.Low(UInt32), System.High(UInt32)));
-    until (not(val = 0));
-
-    data[i - 1] := val;
-    System.Dec(i);
-  end;
-
+  ValidateOutputBufferNotNull(data);
+  TAESPRNGRandom.GetNonZeroBytes(data);
 end;
 
 end.
