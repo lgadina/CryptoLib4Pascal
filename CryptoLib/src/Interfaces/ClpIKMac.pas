@@ -15,19 +15,19 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIEd25519CtxBlake2BSigner;
+unit ClpIKMac;
 
 {$I ..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpISigner;
+  ClpIMac;
 
 type
-  IEd25519CtxBlake2BSigner = interface(ISigner)
 
-    ['{E3138C67-743D-4772-BF30-63D398AE4D2D}']
+  IKMac = interface(IMac)
+    ['{8C0D16C4-80DD-4E8A-8D1D-958AD7C442DD}']
 
   end;
 

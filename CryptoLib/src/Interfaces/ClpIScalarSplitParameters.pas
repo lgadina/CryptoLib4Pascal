@@ -22,8 +22,7 @@ unit ClpIScalarSplitParameters;
 interface
 
 uses
-  ClpBigInteger,
-  ClpIGlvEndomorphism;
+  ClpBigInteger;
 
 type
   IScalarSplitParameters = interface(IInterface)
